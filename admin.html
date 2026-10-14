@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="lo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>MCMods Owner</title>
+<link rel="stylesheet" href="style.css?v=8">
+</head>
+<body>
+<header class="top"><div class="wrap bar"><span class="brand"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>MC<b>Mods</b> <small style="font-weight:400;color:var(--muted)">Owner</small></span><span id="who" class="small" style="margin-left:auto"></span><button id="out" class="btn ghost" hidden type="button">ອອກຈາກລະບົບ</button></div></header>
+<main class="wrap" id="root"><p class="state">ກຳລັງໂຫຼດ...</p></main>
+<script>
+(function(){var errs=[];
+window.addEventListener("error",function(e){var t=e.target;errs.push(t&&t.src?"ໂຫຼດບໍ່ໄດ້: "+t.src.split("/").pop():(e.message||"error")+(e.filename?" @"+e.filename.split("/").pop()+":"+e.lineno:""));},true);
+setTimeout(function(){var m=document.querySelector("main");if(!m||m.textContent.indexOf("ກຳລັງໂຫຼດ")<0)return;
+var d=document.createElement("pre");d.style.cssText="white-space:pre-wrap;color:#ffb4b4;background:#2a1414;padding:12px;border-radius:8px;font-size:13px";
+d.textContent="ໜ້າຍັງບໍ່ເລີ່ມເຮັດວຽກ. ກະລຸນາຖ່າຍຮູບສົ່ງໃຫ້ຜູ້ຊ່ວຍ:\nconfig="+!!window.MCMODS_CONFIG+" shared="+!!window.MC+" sb="+!!(window.MC&&window.MC.sb)+"\nຂໍ້ຜິດພາດ: "+(errs.join(" | ")||"ບໍ່ມີ");
+m.appendChild(d);},6000);})();
+</script>
+<script src="config.js?v=8"></script>
+<script src="shared.js?v=8"></script>
+<script src="admin.js?v=8"></script>
+</body>
+</html>
