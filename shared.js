@@ -14,11 +14,12 @@
       else if (k === "class") e.className = v;
       else e.setAttribute(k, v === true ? "" : v);
     });
-    for (var i = 2; i < arguments.length; i++) {
-      var c = arguments[i];
-      if (c == null || c === false) continue;
+    function add(c) {
+      if (c == null || c === false) return;
+      if (Array.isArray(c)) { c.forEach(add); return; }
       e.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c);
     }
+    for (var i = 2; i < arguments.length; i++) add(arguments[i]);
     return e;
   }
 
@@ -43,8 +44,3 @@
     f.srcdoc = a.bannerHtml;
     slot.appendChild(f);
   }
-
-  window.MC = { C: C, configured: configured, sb: sb, h: h, safeUrl: safeUrl, clear: clear, renderBanner: renderBanner,
-    CATEGORIES: ["Mods", "Addons", "Maps", "Skins", "Shaders", "Texture Packs"],
-    EDITIONS: ["Java", "Bedrock", "Both"], STATUSES: ["pending", "approved", "rejected"] };
-})();
