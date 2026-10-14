@@ -16,7 +16,6 @@
   async function start() {
     MC.clear(root);
     root.appendChild(h("p", { class: "state" }, "ກຳລັງໂຫຼດ..."));
-    if (!window.supabase) { root.appendChild(h("p", { class: "msg err" }, "ໂຫຼດໄລບຣາຣີ Supabase ບໍ່ສຳເລັດ (ເນັດຊ້າ ຫຼື ຖືກບລັອກ). ລອງໃໝ່.")); return; }
     if (!sb) { MC.clear(root); root.appendChild(h("p", { class: "msg err" }, "ຕັ້ງຄ່າ SUPABASE_KEY ໃນ config.js ກ່ອນ.")); return; }
     var s = await sb.auth.getSession();
     MC.clear(root);
@@ -43,3 +42,4 @@
     } }, h("h2", { style: "margin:0" }, "ເຂົ້າສູ່ລະບົບເຈົ້າຂອງ"),
       h("label", { class: "f" }, "ອີເມວ", em), h("label", { class: "f" }, "ລະຫັດຜ່ານ", pw),
       h("button", { class: "btn primary", type: "submit" }, "ເຂົ້າສູ່ລະບົບ"), m);
+    root.appendChild(f);
