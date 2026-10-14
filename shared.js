@@ -1,46 +1,45 @@
 (function () {
   var C = window.MCMODS_CONFIG || {};
   var configured = !!(C.SUPABASE_URL && C.SUPABASE_KEY && C.SUPABASE_KEY.indexOf("PASTE") !== 0);
-  var sb = null;
-  if (configured && window.supabase) sb = window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_KEY);
 
-  function h(tag, props) {
-    var e = document.createElement(tag);
-    props = props || {};
-    Object.keys(props).forEach(function (k) {
-      var v = props[k];
-      if (v == null || v === false) return;
-      if (k.slice(0, 2) === "on" && typeof v === "function") e.addEventListener(k.slice(2), v);
-      else if (k === "class") e.className = v;
-      else e.setAttribute(k, v === true ? "" : v);
-    });
-    function add(c) {
-      if (c == null || c === false) return;
-      if (Array.isArray(c)) { c.forEach(add); return; }
-      e.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c);
+  // ===== ຕົວເຊື່ອມຕໍ່ Supabase ແບບເບົາ (ບໍ່ຕ້ອງໂຫຼດໄລບຣາຣີຈາກພາຍນອກ) =====
+  var SKEY = "mcmods.session";
+  function loadSess() { try { return JSON.parse(localStorage.getItem(SKEY) || "null"); } catch (e) { return null; } }
+  function saveSess(s) { try { if (s) localStorage.setItem(SKEY, JSON.stringify(s)); else localStorage.removeItem(SKEY); } catch (e) {} }
+  function errMsg(j, r) { return (j && (j.msg || j.message || j.error_description || j.error)) || ("HTTP " + r.status); }
+
+  function makeClient(url, key) {
+    function jsonFetch(path, opts) {
+      return fetch(url + path, opts).then(function (r) {
+        return r.text().then(function (t) {
+          var j = null; try { j = t ? JSON.parse(t) : null; } catch (e) { j = null; }
+          return { r: r, j: j };
+        });
+      });
     }
-    for (var i = 2; i < arguments.length; i++) add(arguments[i]);
-    return e;
-  }
+    async function session() {
+      var s = loadSess();
+      if (!s) return null;
+      if (s.expires_at && s.expires_at * 1000 < Date.now() + 30000) {
+        try {
+          var x = await jsonFetch("/auth/v1/token?grant_type=refresh_token", { method: "POST", headers: { apikey: key, "Content-Type": "application/json" }, body: JSON.stringify({ refresh_token: s.refresh_token }) });
+          if (!x.r.ok || !x.j || !x.j.access_token) { saveSess(null); return null; }
+          s = { access_token: x.j.access_token, refresh_token: x.j.refresh_token, expires_at: x.j.expires_at || (Math.floor(Date.now() / 1000) + (x.j.expires_in || 3600)), user: x.j.user || s.user };
+          saveSess(s);
+        } catch (e) { return s; }
+      }
+      return s;
+    }
+    async function headers(extra) {
+      var h = { apikey: key };
+      var s = await session();
+      if (s) h.Authorization = "Bearer " + s.access_token;
+      for (var k in extra) h[k] = extra[k];
+      return h;
+    }
 
-  // ອະນຸຍາດສະເພາະ http/https
-  function safeUrl(u) {
-    if (!u || typeof u !== "string") return null;
-    try {
-      var x = new URL(u.trim());
-      return x.protocol === "https:" || x.protocol === "http:" ? x.href : null;
-    } catch (e) { return null; }
-  }
-
-  function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); }
-
-  function renderBanner(slot) {
-    var a = C.ADS || {};
-    if (!a.bannerEnabled || !a.bannerHtml) { slot.hidden = true; return; }
-    slot.hidden = false;
-    clear(slot);
-    slot.appendChild(h("span", { class: "ad-label" }, "ໂຄສະນາ"));
-    var f = h("iframe", { title: "ໂຄສະນາ", loading: "lazy", sandbox: "allow-scripts allow-popups", class: "ad-frame" });
-    f.srcdoc = a.bannerHtml;
-    slot.appendChild(f);
-  }
+    function from(table) {
+      var q = { mode: "select", select: "*", filters: [], order: "", limit: "", single: false, body: null };
+      var b = {
+        select: function (c) { q.select = c; return b; },
+        insert: function (row) { q.mode = "insert"; q.body = row; return b; },
