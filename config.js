@@ -1,15 +1,48 @@
-// ໄຟລ໌ຕັ້ງຄ່າ - ໃສ່ໄດ້ສະເພາະຄ່າສາທາລະນະ. ຫ້າມໃສ່ service_role key ຫຼື ລະຫັດຖານຂໍ້ມູນ.
-window.MCMODS_CONFIG = {
-  SUPABASE_URL: "https://laxxvhxltdclniredtam.supabase.co",
-  SUPABASE_KEY: "sb_publishable_20v04-xlDIl9LJNg-ECOXg__fP7bi3-",   // ໃສ່ Publishable key (sb_publishable_...)
+(function () {
+  var C = window.MCMODS_CONFIG || {};
+  var configured = !!(C.SUPABASE_URL && C.SUPABASE_KEY && C.SUPABASE_KEY.indexOf("PASTE") !== 0);
+  var sb = null;
+  if (configured && window.supabase) sb = window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_KEY);
 
-  // ປ້າຍໂຄສະນາ: ປິດໄວ້ຈົນກວ່າຈະມີໂຄດ HTML ເຕັມຈາກຜູ້ໃຫ້ບໍລິການ (ບໍ່ແມ່ນ amp-ad)
-  ADS: { bannerEnabled: false, bannerHtml: "" },
+  function h(tag, props) {
+    var e = document.createElement(tag);
+    props = props || {};
+    Object.keys(props).forEach(function (k) {
+      var v = props[k];
+      if (v == null || v === false) return;
+      if (k.slice(0, 2) === "on" && typeof v === "function") e.addEventListener(k.slice(2), v);
+      else if (k === "class") e.className = v;
+      else e.setAttribute(k, v === true ? "" : v);
+    });
+    function add(c) {
+      if (c == null || c === false) return;
+      if (Array.isArray(c)) { c.forEach(add); return; }
+      e.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c);
+    }
+    for (var i = 2; i < arguments.length; i++) add(arguments[i]);
+    return e;
+  }
 
-  // ຂັ້ນ Sponsor (ເລືອກໄດ້, ເປີດໄດ້ຫຼັງກວດກົດຂອງ auctionr ແລ້ວ). ປິດໄວ້ກ່ອນ.
-  SPONSOR: { enabled: true, url: "https://auctionr.org/4/f508109276d7fd56bcaa2d45492045d6" },
+  // ອະນຸຍາດສະເພາະ http/https
+  function safeUrl(u) {
+    if (!u || typeof u !== "string") return null;
+    try {
+      var x = new URL(u.trim());
+      return x.protocol === "https:" || x.protocol === "http:" ? x.href : null;
+    } catch (e) { return null; }
+  }
 
-  // ໂປຣໄຟລ໌ສັງຄົມຂອງເຈົ້າ (ປະໄວ້ວ່າງ = ບໍ່ສະແດງ)
-  SOCIAL: { facebook: "", instagram: "", tiktok: "", youtube: "", x: "" },
-  CONTACT: ""   // ອີເມວຕິດຕໍ່ (ເລືອກໄດ້)
-};
+  function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); }
+
+  function renderBanner(slot) {
+    var a = C.ADS || {};
+    if (!a.bannerEnabled || !a.bannerHtml) { slot.hidden = true; return; }
+    slot.hidden = false;
+    clear(slot);
+    slot.appendChild(h("span", { class: "ad-label" }, "ໂຄສະນາ"));
+    var f = h("iframe", { title: "ໂຄສະນາ", loading: "lazy", sandbox: "allow-scripts allow-popups", class: "ad-frame" });
+    f.srcdoc = a.bannerHtml;
+    slot.appendChild(f);
+  }
+
+  window.MC = { C: C, configured: configured, sb: sb, h: h, safeUrl: safeUrl, clear: clear, renderBanner: renderBanner,
