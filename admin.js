@@ -1,16 +1,3 @@
-(function () {
-  var MC = window.MC, h = MC.h, sb = MC.sb, root = document.getElementById("root");
-  var who = document.getElementById("who"), out = document.getElementById("out");
-  var BUCKET = "mod-covers", MAXIMG = 3 * 1024 * 1024, EXT = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
-
-  function msg(node, text, cls) { MC.clear(node); if (text) node.appendChild(h("div", { class: "msg " + (cls || "") }, text)); }
-
-  function showErr(e) {
-    MC.clear(root);
-    root.appendChild(h("p", { class: "msg err" }, "ມີຂໍ້ຜິດພາດ: " + (e && e.message ? e.message : e)));
-    root.appendChild(h("button", { class: "btn", type: "button", onclick: function () { location.reload(); } }, "ລອງໃໝ່"));
-  }
-  window.addEventListener("error", function (ev) { showErr(ev.message); });
   window.addEventListener("unhandledrejection", function (ev) { showErr(ev.reason); });
 
   async function start() {
@@ -43,3 +30,19 @@
       h("label", { class: "f" }, "ອີເມວ", em), h("label", { class: "f" }, "ລະຫັດຜ່ານ", pw),
       h("button", { class: "btn primary", type: "submit" }, "ເຂົ້າສູ່ລະບົບ"), m);
     root.appendChild(f);
+  }
+
+  function coverPath(url) {
+    var key = "/storage/v1/object/public/" + BUCKET + "/", i = url ? url.indexOf(key) : -1;
+    return i < 0 ? null : decodeURIComponent(url.slice(i + key.length).split("?")[0]);
+  }
+  function removeCover(url) { var p = coverPath(url); if (p) sb.storage.from(BUCKET).remove([p]); }
+
+  var signedIn = false, formMod = null;
+  window.addEventListener("popstate", function () {
+    if (!signedIn) return;
+    if (location.hash === "#form") showForm(formMod); else dashboard();
+  });
+
+  // ===== ໜ້າລາຍການ =====
+  async function dashboard() {
